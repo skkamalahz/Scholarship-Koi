@@ -3,14 +3,36 @@ import { MapContainer, TileLayer, Marker, useMap, Tooltip } from 'react-leaflet'
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { universities } from './data/universities';
-import { X, GraduationCap, MapPin, Info } from 'lucide-react';
+import { X, GraduationCap, MapPin } from 'lucide-react';
 
-// Custom Marker Icon Generator
-const createUniversityIcon = (color) => new L.DivIcon({
+// Get a short scholarship summary for display on the map (e.g. "£1,000 - £26,000")
+const getScholarshipSummary = (scholarships) => {
+  const amounts = scholarships
+    .map((s) => s.amount.match(/£[\d,]+(?: - £[\d,]+)?/g))
+    .flat()
+    .filter(Boolean);
+  if (amounts.length === 0) {
+    const first = scholarships[0]?.amount;
+    return first?.includes('Full') ? 'Full funding' : first || 'Scholarships';
+  }
+  const allNums = amounts.flatMap((a) => (a.match(/£[\d,]+/g) || []).map((m) => parseInt(m.replace(/[£,]/g, ''), 10)));
+  if (allNums.length === 0) return amounts[0];
+  const min = Math.min(...allNums);
+  const max = Math.max(...allNums);
+  return min === max ? `£${min.toLocaleString()}` : `£${min.toLocaleString()} - £${max.toLocaleString()}`;
+};
+
+// Custom Marker Icon Generator - shows dot + scholarship badge
+const createUniversityIcon = (color, scholarshipText) => new L.DivIcon({
   className: 'custom-div-icon',
-  html: `<div class="custom-marker" style="color: ${color}"></div>`,
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
+  html: `
+    <div class="marker-with-badge">
+      <div class="custom-marker" style="background-color: ${color}; border-color: ${color}"></div>
+      <div class="marker-scholarship-badge">${scholarshipText}</div>
+    </div>
+  `,
+  iconSize: [80, 36],
+  iconAnchor: [40, 36],
 });
 
 function ScholarshipDrawer({ selectedUniv, setOpen }) {
@@ -58,13 +80,6 @@ function ScholarshipDrawer({ selectedUniv, setOpen }) {
   );
 }
 
-// Center map component
-function ChangeView({ center, zoom }) {
-  const map = useMap();
-  map.setView(center, zoom);
-  return null;
-}
-
 function App() {
   const [selectedUniv, setSelectedUniv] = useState(null);
 
@@ -99,8 +114,12 @@ function App() {
       <MapContainer
         center={[54.5, -3.0]}
         zoom={6}
+        minZoom={5}
+        maxZoom={14}
         className="map-container"
         zoomControl={false}
+        maxBounds={[[49.5, -8.5], [61, 2]]}
+        maxBoundsViscosity={1}
       >
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
@@ -112,13 +131,16 @@ function App() {
           <Marker
             key={univ.id}
             position={univ.location}
-            icon={createUniversityIcon(univ.color)}
+            icon={createUniversityIcon(univ.color, getScholarshipSummary(univ.scholarships))}
             eventHandlers={{
               click: () => setSelectedUniv(univ),
             }}
           >
-            <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent={false}>
-              <span style={{ fontWeight: 600 }}>{univ.name}</span>
+            <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent={false} className="marker-tooltip">
+              <div style={{ fontWeight: 600, marginBottom: '2px' }}>{univ.name}</div>
+              <div style={{ color: 'var(--primary)', fontSize: '0.9em', fontWeight: 600 }}>
+                {getScholarshipSummary(univ.scholarships)}
+              </div>
             </Tooltip>
           </Marker>
         ))}
