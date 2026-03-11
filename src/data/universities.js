@@ -63,5 +63,15 @@ export const universities = [
     scholarships: [
       { id: 601, title: "Think Big Scholarships", amount: "£5,000 - £26,000", type: "Undergraduate/Postgraduate" }
     ]
+  },
+  {
+    id: 7,
+    name: "Brunel University London",
+    location: [51.5076, -0.4732],
+    color: "#00b4d8", // Teal
+    description: "Brunel University London is a public research university in Uxbridge, West London.",
+    scholarships: [
+      { id: 701, title: "Vice-Chancellor's Postgraduate International Excellence Award", amount: "£6,000", type: "Postgraduate" }
+    ]
   }
 ];

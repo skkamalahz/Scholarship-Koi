@@ -35,6 +35,73 @@ const createUniversityIcon = (color, scholarshipText) => new L.DivIcon({
   iconAnchor: [40, 36],
 });
 
+function WelcomePopup({ isOpen, onClose, onSubmit }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit?.({ name, email, phone });
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="popup-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="popup-modal" onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          className="popup-close"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          <X size={24} />
+        </button>
+        <h2 className="popup-title">Welcome to Scholarship Koi</h2>
+        <p className="popup-subtitle">Please share your details to explore UK scholarships</p>
+        <form onSubmit={handleSubmit} className="popup-form">
+          <div className="popup-field">
+            <label htmlFor="popup-name">Name</label>
+            <input
+              id="popup-name"
+              type="text"
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="popup-field">
+            <label htmlFor="popup-email">Email</label>
+            <input
+              id="popup-email"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="popup-field">
+            <label htmlFor="popup-phone">Phone Number</label>
+            <input
+              id="popup-phone"
+              type="tel"
+              placeholder="Enter your phone number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" className="popup-submit">Continue</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function ScholarshipDrawer({ selectedUniv, setOpen }) {
   if (!selectedUniv) return null;
 
@@ -82,6 +149,15 @@ function ScholarshipDrawer({ selectedUniv, setOpen }) {
 
 function App() {
   const [selectedUniv, setSelectedUniv] = useState(null);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(true);
+
+  const handleWelcomeClose = () => {
+    setShowWelcomePopup(false);
+  };
+
+  const handleWelcomeSubmit = (data) => {
+    console.log('User details:', data);
+  };
 
   return (
     <div style={{ position: 'relative' }}>
@@ -97,9 +173,9 @@ function App() {
         </div>
 
         <nav className="nav-menu">
-          <a href="#" className="nav-link">Universities</a>
-          <a href="#" className="nav-link">Scholarships</a>
-          <a href="#" className="nav-link">About</a>
+          <a href="#" className="nav-link">Tuition Fees</a>
+          <a href="#" className="nav-link">Scholarship</a>
+          <a href="#" className="nav-link">Ranking</a>
         </nav>
 
         <div className="header-actions">
@@ -147,6 +223,12 @@ function App() {
       </MapContainer>
 
       <ScholarshipDrawer selectedUniv={selectedUniv} setOpen={setSelectedUniv} />
+
+      <WelcomePopup
+        isOpen={showWelcomePopup}
+        onClose={handleWelcomeClose}
+        onSubmit={handleWelcomeSubmit}
+      />
 
       {/* Decorative Branding */}
       <div style={{
