@@ -49,8 +49,8 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   if (!isOpen) return null;
 
   return (
-    <div className="popup-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="popup-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="popup-overlay">
+      <div className="popup-modal">
         <button
           type="button"
           className="popup-close"
