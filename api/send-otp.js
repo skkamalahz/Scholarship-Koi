@@ -31,11 +31,25 @@ export default async function handler(req, res) {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
-      return res.status(500).json({ error: 'Server configuration error' });
+      console.error('Missing env: VITE_SUPABASE_URL/SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+      return res.status(500).json({
+        error: 'Server configuration error',
+        hint: 'Add VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel Environment Variables',
+      });
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: existing } = await supabase
+      .from('user_registrations')
+      .select('id')
+      .eq('phone', normalizedPhone)
+      .limit(1)
+      .single();
+
+    if (existing) {
+      return res.status(400).json({ error: 'This phone number is already registered.' });
+    }
 
     const { error: insertError } = await supabase.from('otp_verifications').insert({
       phone: normalizedPhone,
@@ -46,7 +60,8 @@ export default async function handler(req, res) {
 
     if (insertError) {
       console.error('DB insert error:', insertError);
-      return res.status(500).json({ error: 'Failed to store OTP' });
+      const hint = insertError.code === '42P01' ? 'Create otp_verifications table in Supabase SQL Editor' : 'Check Supabase connection';
+      return res.status(500).json({ error: 'Failed to store OTP', hint });
     }
 
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -79,7 +94,10 @@ export default async function handler(req, res) {
       console.log('[DEV] Twilio not configured. OTP for', normalizedPhone, ':', otp);
     }
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({
+      success: true,
+      ...(!(accountSid && authToken && fromNumber) ? { otp } : {}),
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Internal server error' });

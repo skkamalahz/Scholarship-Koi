@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, useMap, Tooltip } from 'react-leaflet'
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { universities } from './data/universities';
-import { X, GraduationCap, MapPin } from 'lucide-react';
+import { X, GraduationCap, MapPin, Copy } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 
 // Get a short scholarship summary for display on the map (e.g. "£1,000 - £26,000")
@@ -54,6 +54,16 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   const [otpVerified, setOtpVerified] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [displayedOtp, setDisplayedOtp] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyOtp = async () => {
+    if (displayedOtp) {
+      await navigator.clipboard.writeText(displayedOtp);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const handleSendOtp = async () => {
     const trimmed = phone?.trim();
@@ -70,8 +80,9 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
         body: JSON.stringify({ phone: trimmed }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
+      if (!res.ok) throw new Error(data.hint ? `${data.error}: ${data.hint}` : data.error || 'Failed to send OTP');
       setOtpSent(true);
+      setDisplayedOtp(data.otp || null);
     } catch (err) {
       setError(err.message || 'Failed to send OTP. Try again.');
     } finally {
@@ -95,7 +106,7 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
         body: JSON.stringify({ phone: trimmed, otp: code }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Invalid OTP');
+      if (!res.ok) throw new Error(data.hint ? `${data.error}: ${data.hint}` : data.error || 'Invalid OTP');
       setOtpVerified(true);
     } catch (err) {
       setError(err.message || 'Invalid or expired OTP.');
@@ -187,6 +198,7 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
                   setOtpSent(false);
                   setOtpVerified(false);
                   setOtpCode('');
+                  setDisplayedOtp(null);
                 }}
                 required
                 style={{ flex: 1 }}
@@ -202,26 +214,42 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
               </button>
             </div>
             {otpSent && !otpVerified && (
-              <div style={{ marginTop: '12px', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={6}
-                  placeholder="Enter 6-digit OTP"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                  style={{ width: '120px', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.2)', color: 'inherit', fontSize: '1rem' }}
-                />
-                <button
-                  type="button"
-                  className="popup-submit"
-                  onClick={handleVerifyOtp}
-                  disabled={verifyingOtp || otpCode.length !== 6}
-                  style={{ padding: '10px 16px' }}
-                >
-                  {verifyingOtp ? 'Verifying...' : 'Verify OTP'}
-                </button>
+              <div style={{ marginTop: '12px' }}>
+                {displayedOtp && (
+                  <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Your OTP:</span>
+                    <code style={{ padding: '12px 16px', background: 'rgba(201, 162, 39, 0.15)', borderRadius: '8px', fontSize: '1.25rem', fontWeight: 600, letterSpacing: '4px' }}>{displayedOtp}</code>
+                    <button
+                      type="button"
+                      onClick={handleCopyOtp}
+                      title="Copy OTP"
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: 'inherit', cursor: 'pointer', fontSize: '0.9rem' }}
+                    >
+                      <Copy size={14} /> {copied ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    placeholder="Enter 6-digit OTP"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    style={{ width: '120px', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.2)', color: 'inherit', fontSize: '1rem' }}
+                  />
+                  <button
+                    type="button"
+                    className="popup-submit"
+                    onClick={handleVerifyOtp}
+                    disabled={verifyingOtp || otpCode.length !== 6}
+                    style={{ padding: '10px 16px' }}
+                  >
+                    {verifyingOtp ? 'Verifying...' : 'Verify OTP'}
+                  </button>
+                </div>
               </div>
             )}
             {otpVerified && (
@@ -378,6 +406,9 @@ function App() {
       });
       if (error) {
         if (error.code === '23505') {
+          if (error.message?.includes('phone') || error.constraint?.includes('phone')) {
+            throw new Error('This phone number is already registered.');
+          }
           localStorage.setItem(REGISTERED_KEY, 'true');
           return;
         }
