@@ -153,6 +153,9 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
     return (
       <div className="popup-overlay">
         <div className="popup-modal popup-thankyou">
+          <button type="button" className="popup-close" onClick={onClose} aria-label="Close">
+            <X size={24} />
+          </button>
           <h2 className="popup-title" style={{ color: 'var(--primary)', marginBottom: '12px' }}>Thank You!</h2>
           <p className="popup-subtitle" style={{ marginBottom: '24px', lineHeight: 1.6 }}>
             Your details have been submitted successfully. We'll help you explore the best UK scholarship opportunities.
@@ -168,6 +171,9 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   return (
     <div className="popup-overlay">
       <div className="popup-modal">
+        <button type="button" className="popup-close" onClick={onClose} aria-label="Close">
+          <X size={24} />
+        </button>
         <h2 className="popup-title">Welcome to Scholarship Koi</h2>
         <p className="popup-subtitle">Please share your details to explore UK scholarships</p>
         <form onSubmit={handleSubmit} className="popup-form">
@@ -390,7 +396,7 @@ const REGISTERED_KEY = 'scholarshipKoi_registered';
 
 function App() {
   const [selectedUniv, setSelectedUniv] = useState(null);
-  const [showWelcomePopup, setShowWelcomePopup] = useState(() => !localStorage.getItem(REGISTERED_KEY));
+  const [showWelcomePopup, setShowWelcomePopup] = useState(true);
   const [userEmail, setUserEmail] = useState(null);
 
   const handleWelcomeClose = () => {
