@@ -312,6 +312,28 @@ h3 {
   border-color: var(--primary);
 }
 
+.popup-field select {
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text-main);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  width: 100%;
+  cursor: pointer;
+}
+
+.popup-field select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.popup-field select option {
+  background: var(--bg-card);
+  color: var(--text-main);
+}
+
 .popup-submit {
   margin-top: 8px;
   padding: 14px 24px;
@@ -366,6 +388,25 @@ h3 {
   max-height: 50vh;
   overflow-y: auto;
   padding-right: 8px;
+}
+
+.drawer-apply-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px 24px;
+  background: var(--primary);
+  color: var(--bg-dark);
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.drawer-apply-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 /* Scholarship Card */

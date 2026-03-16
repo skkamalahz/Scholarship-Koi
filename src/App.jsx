@@ -42,10 +42,12 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [educationQualification, setEducationQualification] = useState('');
+  const [interestedCourses, setInterestedCourses] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit?.({ name, email, phone });
+    onSubmit?.({ name, email, phone, educationQualification, interestedCourses });
     onClose();
   };
 
@@ -97,6 +99,44 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
               onChange={(e) => setPhone(e.target.value)}
               required
             />
+          </div>
+          <div className="popup-field">
+            <label htmlFor="popup-education">Education Qualification</label>
+            <select
+              id="popup-education"
+              value={educationQualification}
+              onChange={(e) => setEducationQualification(e.target.value)}
+              required
+            >
+              <option value="">Select your qualification</option>
+              <option value="High School">High School</option>
+              <option value="Diploma">Diploma</option>
+              <option value="Bachelor's Degree">Bachelor's Degree</option>
+              <option value="Master's Degree">Master's Degree</option>
+              <option value="PhD">PhD</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div className="popup-field">
+            <label htmlFor="popup-courses">Interested Courses</label>
+            <select
+              id="popup-courses"
+              value={interestedCourses}
+              onChange={(e) => setInterestedCourses(e.target.value)}
+              required
+            >
+              <option value="">Select course interest</option>
+              <option value="Business & Management">Business & Management</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Computer Science & IT">Computer Science & IT</option>
+              <option value="Medicine & Health">Medicine & Health</option>
+              <option value="Law">Law</option>
+              <option value="Arts & Humanities">Arts & Humanities</option>
+              <option value="Science">Science</option>
+              <option value="Education">Education</option>
+              <option value="Social Sciences">Social Sciences</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
           <button type="submit" className="popup-submit">Continue</button>
         </form>
@@ -166,6 +206,10 @@ function ScholarshipDrawer({ selectedUniv, setOpen }) {
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Contact university for scholarship details.</p>
         )}
       </div>
+
+      <button className="drawer-apply-btn">
+        Apply Now
+      </button>
     </div>
   );
 }
