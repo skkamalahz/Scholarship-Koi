@@ -1,4 +1,10 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+/// <reference path="./supabase-js.d.ts" />
+import { createClient } from 'npm:@supabase/supabase-js@2'
+
+declare const Deno: {
+  serve: (handler: (req: Request) => Promise<Response> | Response) => void
+  env: { get(key: string): string | undefined }
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
