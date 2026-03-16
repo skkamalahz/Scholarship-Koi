@@ -55,14 +55,7 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
   const handleSendOtp = async () => {
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setError('OTP service not configured. Add Supabase URL and key to .env.local.');
-      return;
-    }
     const trimmed = phone?.trim();
     if (!trimmed) {
       setError('Enter your phone number first.');
@@ -71,12 +64,9 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
     setError(null);
     setSendingOtp(true);
     try {
-      const res = await fetch(`${supabaseUrl}/functions/v1/send-otp`, {
+      const res = await fetch('/api/send-otp', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: trimmed }),
       });
       const data = await res.json();
@@ -90,10 +80,6 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   };
 
   const handleVerifyOtp = async () => {
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setError('OTP service not configured.');
-      return;
-    }
     const trimmed = phone?.trim();
     const code = otpCode?.trim();
     if (!trimmed || !code) {
@@ -103,12 +89,9 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
     setError(null);
     setVerifyingOtp(true);
     try {
-      const res = await fetch(`${supabaseUrl}/functions/v1/verify-otp`, {
+      const res = await fetch('/api/verify-otp', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: trimmed, otp: code }),
       });
       const data = await res.json();
