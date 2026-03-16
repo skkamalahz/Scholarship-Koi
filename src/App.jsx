@@ -7,13 +7,16 @@ import { X, GraduationCap, MapPin } from 'lucide-react';
 
 // Get a short scholarship summary for display on the map (e.g. "£1,000 - £26,000")
 const getScholarshipSummary = (scholarships) => {
+  if (!scholarships?.length) return 'View details';
   const amounts = scholarships
-    .map((s) => s.amount.match(/£[\d,]+(?: - £[\d,]+)?/g))
+    .map((s) => s.amount?.match(/£[\d,]+(?: - £[\d,]+)?/g))
     .flat()
     .filter(Boolean);
   if (amounts.length === 0) {
     const first = scholarships[0]?.amount;
-    return first?.includes('Full') ? 'Full funding' : first || 'Scholarships';
+    if (first?.includes('Full') || first?.includes('100%')) return 'Full funding';
+    if (first?.match(/\d+%/)) return first;
+    return first || 'Scholarships';
   }
   const allNums = amounts.flatMap((a) => (a.match(/£[\d,]+/g) || []).map((m) => parseInt(m.replace(/[£,]/g, ''), 10)));
   if (allNums.length === 0) return amounts[0];
@@ -128,12 +131,30 @@ function ScholarshipDrawer({ selectedUniv, setOpen }) {
         <p>{selectedUniv.description}</p>
       </div>
 
+      {/* Tuition Fees & USP */}
+      {(selectedUniv.usp || selectedUniv.tuitionFees) && (
+        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: 'rgba(201, 162, 39, 0.08)', borderRadius: '12px', border: '1px solid rgba(201, 162, 39, 0.2)' }}>
+          {selectedUniv.usp && (
+            <div style={{ marginBottom: selectedUniv.tuitionFees ? '12px' : '0' }}>
+              <strong style={{ color: 'var(--primary)', display: 'block', marginBottom: '4px', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Why choose this university?</strong>
+              <p style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>{selectedUniv.usp}</p>
+            </div>
+          )}
+          {selectedUniv.tuitionFees && (
+            <div>
+              <strong style={{ color: 'var(--primary)', display: 'block', marginBottom: '4px', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tuition Fees</strong>
+              <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', fontWeight: '500' }}>{selectedUniv.tuitionFees}</p>
+            </div>
+          )}
+        </div>
+      )}
+
       <h3 style={{ fontSize: '1.1rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <GraduationCap size={20} color="var(--primary)" /> Available Scholarships
       </h3>
 
       <div className="scholarship-list">
-        {selectedUniv.scholarships.map(scholarship => (
+        {(selectedUniv.scholarships || []).length > 0 ? selectedUniv.scholarships.map(scholarship => (
           <div key={scholarship.id} className="scholarship-card">
             <h4 style={{ marginBottom: '4px' }}>{scholarship.title}</h4>
             <p className="price-tag">{scholarship.amount}</p>
@@ -141,7 +162,9 @@ function ScholarshipDrawer({ selectedUniv, setOpen }) {
               {scholarship.type}
             </p>
           </div>
-        ))}
+        )) : (
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Contact university for scholarship details.</p>
+        )}
       </div>
     </div>
   );
