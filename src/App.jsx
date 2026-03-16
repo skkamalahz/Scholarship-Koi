@@ -261,9 +261,15 @@ function ScholarshipDrawer({ selectedUniv, setOpen, onApplyNow }) {
         )}
       </div>
 
-      <button className="drawer-apply-btn" onClick={onApplyNow}>
+      <a
+        href="https://students.ahzassociates.co.uk/study-in-uk-from-bangladesh-scholarship-koi"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="drawer-apply-btn"
+        onClick={onApplyNow}
+      >
         Apply Now
-      </button>
+      </a>
     </div>
   );
 }

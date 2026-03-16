@@ -400,6 +400,7 @@ h3 {
 }
 
 .drawer-apply-btn {
+  display: block;
   width: 100%;
   margin-top: 20px;
   padding: 14px 24px;
@@ -410,6 +411,8 @@ h3 {
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+  text-align: center;
+  text-decoration: none;
   transition: opacity 0.2s, transform 0.2s;
 }
 
