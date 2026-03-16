@@ -407,7 +407,7 @@ function App() {
       if (error) {
         if (error.code === '23505') {
           if (error.message?.includes('phone') || error.constraint?.includes('phone')) {
-            throw new Error('This phone number is already registered.');
+            throw new Error('This number is already registered.');
           }
           localStorage.setItem(REGISTERED_KEY, 'true');
           return;

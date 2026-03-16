@@ -48,7 +48,7 @@ export default async function handler(req, res) {
       .single();
 
     if (existing) {
-      return res.status(400).json({ error: 'This phone number is already registered.' });
+      return res.status(400).json({ error: 'This number is already registered.' });
     }
 
     const { error: insertError } = await supabase.from('otp_verifications').insert({
