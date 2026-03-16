@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { universities } from './data/universities';
 import { X, GraduationCap, MapPin } from 'lucide-react';
+import { supabase } from './lib/supabaseClient';
 
 // Get a short scholarship summary for display on the map (e.g. "£1,000 - £26,000")
 const getScholarshipSummary = (scholarships) => {
@@ -44,11 +45,21 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   const [phone, setPhone] = useState('');
   const [educationQualification, setEducationQualification] = useState('');
   const [interestedCourses, setInterestedCourses] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit?.({ name, email, phone, educationQualification, interestedCourses });
-    onClose();
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await onSubmit?.({ name, email, phone, educationQualification, interestedCourses });
+      onClose();
+    } catch (err) {
+      setError(err.message || 'Failed to save. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -138,14 +149,19 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
               <option value="Other">Other</option>
             </select>
           </div>
-          <button type="submit" className="popup-submit">Continue</button>
+          {error && (
+            <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '-8px' }}>{error}</p>
+          )}
+          <button type="submit" className="popup-submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : 'Continue'}
+          </button>
         </form>
       </div>
     </div>
   );
 }
 
-function ScholarshipDrawer({ selectedUniv, setOpen }) {
+function ScholarshipDrawer({ selectedUniv, setOpen, onApplyNow }) {
   if (!selectedUniv) return null;
 
   return (
@@ -207,7 +223,7 @@ function ScholarshipDrawer({ selectedUniv, setOpen }) {
         )}
       </div>
 
-      <button className="drawer-apply-btn">
+      <button className="drawer-apply-btn" onClick={onApplyNow}>
         Apply Now
       </button>
     </div>
@@ -217,13 +233,45 @@ function ScholarshipDrawer({ selectedUniv, setOpen }) {
 function App() {
   const [selectedUniv, setSelectedUniv] = useState(null);
   const [showWelcomePopup, setShowWelcomePopup] = useState(true);
+  const [userEmail, setUserEmail] = useState(null);
 
   const handleWelcomeClose = () => {
     setShowWelcomePopup(false);
   };
 
-  const handleWelcomeSubmit = (data) => {
-    console.log('User details:', data);
+  const handleWelcomeSubmit = async (data) => {
+    setUserEmail(data.email);
+    if (supabase) {
+      const { error } = await supabase.from('user_registrations').insert({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        education_qualification: data.educationQualification,
+        interested_courses: data.interestedCourses,
+      });
+      if (error) throw new Error(error.message);
+    } else {
+      console.warn('Supabase not configured - add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.local');
+    }
+  };
+
+  const handleApplyNow = async () => {
+    if (!selectedUniv) return;
+    if (supabase && userEmail) {
+      try {
+        const { error } = await supabase.from('scholarship_applications').insert({
+          user_email: userEmail,
+          university_id: selectedUniv.id,
+          university_name: selectedUniv.name,
+        });
+        if (error) throw error;
+        setSelectedUniv(null);
+      } catch (err) {
+        console.error('Failed to save application:', err);
+      }
+    } else {
+      setSelectedUniv(null);
+    }
   };
 
   return (
@@ -289,7 +337,7 @@ function App() {
         ))}
       </MapContainer>
 
-      <ScholarshipDrawer selectedUniv={selectedUniv} setOpen={setSelectedUniv} />
+      <ScholarshipDrawer selectedUniv={selectedUniv} setOpen={setSelectedUniv} onApplyNow={handleApplyNow} />
 
       <WelcomePopup
         isOpen={showWelcomePopup}
