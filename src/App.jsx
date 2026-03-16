@@ -268,9 +268,11 @@ function ScholarshipDrawer({ selectedUniv, setOpen, onApplyNow }) {
   );
 }
 
+const REGISTERED_KEY = 'scholarshipKoi_registered';
+
 function App() {
   const [selectedUniv, setSelectedUniv] = useState(null);
-  const [showWelcomePopup, setShowWelcomePopup] = useState(true);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(() => !localStorage.getItem(REGISTERED_KEY));
   const [userEmail, setUserEmail] = useState(null);
 
   const handleWelcomeClose = () => {
@@ -287,8 +289,16 @@ function App() {
         education_qualification: data.educationQualification,
         interested_courses: data.interestedCourses,
       });
-      if (error) throw new Error(error.message);
+      if (error) {
+        if (error.code === '23505') {
+          localStorage.setItem(REGISTERED_KEY, 'true');
+          return;
+        }
+        throw new Error(error.message);
+      }
+      localStorage.setItem(REGISTERED_KEY, 'true');
     } else {
+      localStorage.setItem(REGISTERED_KEY, 'true');
       console.warn('Supabase not configured - add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.local');
     }
   };
