@@ -336,6 +336,7 @@ h3 {
 
 .popup-robot-check {
   margin-top: 4px;
+  min-height: 78px;
 }
 
 .popup-thankyou {

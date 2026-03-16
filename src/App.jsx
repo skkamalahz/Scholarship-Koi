@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { MapContainer, TileLayer, Marker, useMap, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -45,15 +46,18 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   const [phone, setPhone] = useState('');
   const [educationQualification, setEducationQualification] = useState('');
   const [interestedCourses, setInterestedCourses] = useState('');
-  const [notRobot, setNotRobot] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
 
+  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!notRobot) {
-      setError('Please confirm you are not a robot.');
+    if (!recaptchaToken) {
+      setError('Please complete the captcha verification.');
       return;
     }
     setError(null);
@@ -172,15 +176,16 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
             </select>
           </div>
           <div className="popup-field popup-robot-check">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.95rem' }}>
-              <input
-                type="checkbox"
-                checked={notRobot}
-                onChange={(e) => setNotRobot(e.target.checked)}
-                style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }}
-              />
-              I am not a robot
-            </label>
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={recaptchaSiteKey}
+              onChange={(token) => {
+                setRecaptchaToken(token);
+                setError(null);
+              }}
+              onExpired={() => setRecaptchaToken(null)}
+              theme="dark"
+            />
           </div>
           {error && (
             <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '-8px' }}>{error}</p>
