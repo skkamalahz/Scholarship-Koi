@@ -334,6 +334,14 @@ h3 {
   color: var(--text-main);
 }
 
+.popup-robot-check {
+  margin-top: 4px;
+}
+
+.popup-thankyou {
+  text-align: center;
+}
+
 .popup-submit {
   margin-top: 8px;
   padding: 14px 24px;

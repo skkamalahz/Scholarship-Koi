@@ -45,16 +45,22 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   const [phone, setPhone] = useState('');
   const [educationQualification, setEducationQualification] = useState('');
   const [interestedCourses, setInterestedCourses] = useState('');
+  const [notRobot, setNotRobot] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!notRobot) {
+      setError('Please confirm you are not a robot.');
+      return;
+    }
     setError(null);
     setIsSubmitting(true);
     try {
       await onSubmit?.({ name, email, phone, educationQualification, interestedCourses });
-      onClose();
+      setSubmitted(true);
     } catch (err) {
       setError(err.message || 'Failed to save. Please try again.');
     } finally {
@@ -63,6 +69,22 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   };
 
   if (!isOpen) return null;
+
+  if (submitted) {
+    return (
+      <div className="popup-overlay">
+        <div className="popup-modal popup-thankyou">
+          <h2 className="popup-title" style={{ color: 'var(--primary)', marginBottom: '12px' }}>Thank You!</h2>
+          <p className="popup-subtitle" style={{ marginBottom: '24px', lineHeight: 1.6 }}>
+            Your details have been submitted successfully. We'll help you explore the best UK scholarship opportunities.
+          </p>
+          <button type="button" className="popup-submit" onClick={onClose}>
+            Get Started
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="popup-overlay">
@@ -148,6 +170,17 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
               <option value="Social Sciences">Social Sciences</option>
               <option value="Other">Other</option>
             </select>
+          </div>
+          <div className="popup-field popup-robot-check">
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.95rem' }}>
+              <input
+                type="checkbox"
+                checked={notRobot}
+                onChange={(e) => setNotRobot(e.target.checked)}
+                style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }}
+              />
+              I am not a robot
+            </label>
           </div>
           {error && (
             <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '-8px' }}>{error}</p>
