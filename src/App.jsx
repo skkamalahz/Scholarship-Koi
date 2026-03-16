@@ -187,7 +187,7 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
           </div>
           <div className="popup-field">
             <label htmlFor="popup-phone">Phone Number</label>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+            <div className="popup-phone-row">
               <input
                 id="popup-phone"
                 type="tel"
@@ -201,14 +201,12 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
                   setDisplayedOtp(null);
                 }}
                 required
-                style={{ flex: 1 }}
               />
               <button
                 type="button"
-                className="popup-submit"
+                className="popup-submit popup-send-otp-btn"
                 onClick={handleSendOtp}
                 disabled={sendingOtp || !phone?.trim() || otpVerified}
-                style={{ whiteSpace: 'nowrap', padding: '10px 16px' }}
               >
                 {sendingOtp ? 'Sending...' : otpVerified ? 'Verified' : 'Send OTP'}
               </button>

@@ -334,6 +334,24 @@ h3 {
   color: var(--text-main);
 }
 
+.popup-phone-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.popup-phone-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.popup-send-otp-btn {
+  margin-top: 0;
+  padding: 12px 16px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .popup-robot-check {
   margin-top: 4px;
   min-height: 78px;
