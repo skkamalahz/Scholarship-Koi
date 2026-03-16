@@ -1,5 +1,4 @@
-import React, { useState, useRef } from 'react';
-import ReCAPTCHA from 'react-google-recaptcha';
+import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -46,8 +45,6 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   const [phone, setPhone] = useState('');
   const [educationQualification, setEducationQualification] = useState('');
   const [interestedCourses, setInterestedCourses] = useState('');
-  const [recaptchaToken, setRecaptchaToken] = useState(null);
-  const recaptchaRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
@@ -58,7 +55,6 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
 
-  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -129,10 +125,6 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
     e.preventDefault();
     if (!otpVerified) {
       setError('Please verify your phone number with OTP first.');
-      return;
-    }
-    if (!recaptchaToken) {
-      setError('Please complete the captcha verification.');
       return;
     }
     setError(null);
@@ -292,18 +284,6 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
               <option value="Social Sciences">Social Sciences</option>
               <option value="Other">Other</option>
             </select>
-          </div>
-          <div className="popup-field popup-robot-check">
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey={recaptchaSiteKey}
-              onChange={(token) => {
-                setRecaptchaToken(token);
-                setError(null);
-              }}
-              onExpired={() => setRecaptchaToken(null)}
-              theme="dark"
-            />
           </div>
           {error && (
             <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '-8px' }}>{error}</p>
