@@ -93,14 +93,6 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   return (
     <div className="popup-overlay">
       <div className="popup-modal">
-        <button
-          type="button"
-          className="popup-close"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          <X size={24} />
-        </button>
         <h2 className="popup-title">Welcome to Scholarship Koi</h2>
         <p className="popup-subtitle">Please share your details to explore UK scholarships</p>
         <form onSubmit={handleSubmit} className="popup-form">
