@@ -52,10 +52,85 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
   const [error, setError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
 
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+
   const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  const handleSendOtp = async () => {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      setError('OTP service not configured. Add Supabase URL and key to .env.local.');
+      return;
+    }
+    const trimmed = phone?.trim();
+    if (!trimmed) {
+      setError('Enter your phone number first.');
+      return;
+    }
+    setError(null);
+    setSendingOtp(true);
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/send-otp`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
+      setOtpSent(true);
+    } catch (err) {
+      setError(err.message || 'Failed to send OTP. Try again.');
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      setError('OTP service not configured.');
+      return;
+    }
+    const trimmed = phone?.trim();
+    const code = otpCode?.trim();
+    if (!trimmed || !code) {
+      setError('Enter the OTP you received.');
+      return;
+    }
+    setError(null);
+    setVerifyingOtp(true);
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/verify-otp`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: trimmed, otp: code }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Invalid OTP');
+      setOtpVerified(true);
+    } catch (err) {
+      setError(err.message || 'Invalid or expired OTP.');
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!otpVerified) {
+      setError('Please verify your phone number with OTP first.');
+      return;
+    }
     if (!recaptchaToken) {
       setError('Please complete the captcha verification.');
       return;
@@ -120,14 +195,59 @@ function WelcomePopup({ isOpen, onClose, onSubmit }) {
           </div>
           <div className="popup-field">
             <label htmlFor="popup-phone">Phone Number</label>
-            <input
-              id="popup-phone"
-              type="tel"
-              placeholder="Enter your phone number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-            />
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+              <input
+                id="popup-phone"
+                type="tel"
+                placeholder="e.g. +44 7700 900000"
+                value={phone}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  setOtpSent(false);
+                  setOtpVerified(false);
+                  setOtpCode('');
+                }}
+                required
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className="popup-submit"
+                onClick={handleSendOtp}
+                disabled={sendingOtp || !phone?.trim() || otpVerified}
+                style={{ whiteSpace: 'nowrap', padding: '10px 16px' }}
+              >
+                {sendingOtp ? 'Sending...' : otpVerified ? 'Verified' : 'Send OTP'}
+              </button>
+            </div>
+            {otpSent && !otpVerified && (
+              <div style={{ marginTop: '12px', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  placeholder="Enter 6-digit OTP"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                  style={{ width: '120px', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.2)', color: 'inherit', fontSize: '1rem' }}
+                />
+                <button
+                  type="button"
+                  className="popup-submit"
+                  onClick={handleVerifyOtp}
+                  disabled={verifyingOtp || otpCode.length !== 6}
+                  style={{ padding: '10px 16px' }}
+                >
+                  {verifyingOtp ? 'Verifying...' : 'Verify OTP'}
+                </button>
+              </div>
+            )}
+            {otpVerified && (
+              <p style={{ marginTop: '8px', color: 'var(--primary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '1.2em' }}>✓</span> Phone verified
+              </p>
+            )}
           </div>
           <div className="popup-field">
             <label htmlFor="popup-education">Education Qualification</label>
